@@ -18,12 +18,12 @@ func NewWorld(levels ...*Level) *World {
 	}
 }
 
-func (w *World) update() {
-	w.getCurrentLevel().update()
+func (w *World) update(g *Game) {
+	w.getCurrentLevel().update(g)
 }
 
 func (w *World) Spawn(e IEntity, position Position) {
-	e.SetPosition(position)
+	e.Get().Position = position
 	w.getCurrentLevel().spawn(e)
 }
 

@@ -15,6 +15,7 @@ type Player struct {
 	Snake
 	speed int
 	tail  []*tail
+	move  func(int int, deltaTime float64) int
 }
 
 func NewPlayer() *Player {
@@ -25,8 +26,9 @@ func NewPlayer() *Player {
 				Id: engine.PLAYER,
 			},
 		},
-		speed: 4, //fps
+		speed: 10,
 		tail:  make([]*tail, 0),
+		move:  movement(),
 	}
 }
 
@@ -44,24 +46,65 @@ func (p *Player) AddTail(g *engine.Game) {
 
 func (p *Player) Update(g *engine.Game) {
 	p.LastDirection = p.Direction
-	p.LastPosition = *p.Position
+	p.LastPosition = p.Position
+	p.Position = p.Position.Move(
+		p.move(p.speed, g.States.DeltaTime),
+		p.Direction,
+	)
 	p.Direction = p.readInput(g)
-	p.Position = p.Position.Move(0.2, p.Direction)
-	g.Logf("LP : %v", p.LastPosition)
-	logx, logy := p.Position.Floor()
-	g.Logf("P : %v ", logx, logy)
+	p.CheckCollision(g)
+
+}
+
+func (p *Player) CheckCollision(g *engine.Game) {
+	coll := p.Collision
+	if coll != nil {
+		switch coll.Get().Id {
+		case engine.TAIL:
+			g.GameOver()
+		}
+	}
+
+	surfaceId := p.SurfaceId
+	switch surfaceId {
+	case engine.WALL:
+		g.GameOver()
+	}
+}
+
+func movement() func(int int, deltaTime float64) int {
+	move := 0.0
+	return func(value int, deltaTime float64) int {
+		move += float64(value) * deltaTime
+		validMove := int(move)
+		move -= float64(validMove)
+		return validMove
+	}
+
 }
 
 func (p *Player) readInput(g *engine.Game) engine.Direction {
 	input := g.States.Input
 	switch input {
 	case 'w':
+		if p.Direction.Y != 0 {
+			break
+		}
 		return engine.Direction{}.Up()
 	case 's':
+		if p.Direction.Y != 0 {
+			break
+		}
 		return engine.Direction{}.Down()
 	case 'd':
+		if p.Direction.X != 0 {
+			break
+		}
 		return engine.Direction{}.Right()
 	case 'a':
+		if p.Direction.X != 0 {
+			break
+		}
 		return engine.Direction{}.Left()
 	}
 	return p.Direction
@@ -86,26 +129,20 @@ func newTail(parent *Snake) *tail {
 }
 
 func (t *tail) Update(g *engine.Game) {
-	nlx, nly := t.parent.LastPosition.Floor()
-	olx, oly := t.parent.Position.Floor()
-	if nlx == olx && nly == oly {
+	lp := t.parent.LastPosition
+	cp := t.parent.Position
+	if lp.X == cp.X && lp.Y == cp.Y {
 		return
 	}
 
 	t.LastDirection = t.Direction
-	t.LastPosition = *t.Position
+	t.LastPosition = t.Position
 
 	t.Direction = t.parent.LastDirection
 
-	nx, ny := t.parent.Position.Floor()
-	next := engine.Position{
-		X: float64(nx - t.Direction.X),
-		Y: float64(ny - t.Direction.Y),
+	t.Position = engine.Position{
+		X: cp.X - t.Direction.X,
+		Y: cp.Y - t.Direction.Y,
 	}
 
-	nextX, nextY := next.Floor()
-	t.Position = &engine.Position{
-		X: float64(nextX),
-		Y: float64(nextY),
-	}
 }

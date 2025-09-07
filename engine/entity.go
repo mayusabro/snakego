@@ -7,7 +7,7 @@ const (
 	TAIL   = 101
 )
 
-var sprites = map[byte]rune{
+var sprites = map[int]rune{
 	PLAYER: '@',
 	WALL:   '+',
 	SPACE:  ' ',
@@ -15,44 +15,28 @@ var sprites = map[byte]rune{
 }
 
 type IEntity interface {
-	GetPosition() Position
-	SetPosition(Position)
-	SetCollision(*Entity)
+	Get() *Entity
+
 	Update(*Game)
 	Start(*Game)
-	GetId() byte
-	GetRef() int
+
 	Destroy()
 }
 
 type Entity struct {
 	Position  Position
-	Collision *Entity
-	Id        byte
-	Ref       int
+	Collision IEntity
+	SurfaceId int
+	Id        int
+	Ref       *IEntity
 }
 
-func (e *Entity) GetPosition() Position {
-	return e.Position
-}
-
-func (e *Entity) SetPosition(pos Position) {
-	e.Position = pos
-}
-func (e *Entity) GetId() byte {
-	return e.Id
-}
-
-func (e *Entity) GetRef() int {
-	return e.Ref
+func (e *Entity) Get() *Entity {
+	return e
 }
 
 func (e *Entity) Destroy() {
-	e.Ref = -1
-}
-
-func (e *Entity) SetCollision(entity *Entity) {
-	e.Collision = entity
+	e.Ref = nil
 }
 
 func (e *Entity) Start(game *Game) {}

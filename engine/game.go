@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"os"
 	"time"
 )
 
@@ -15,6 +14,7 @@ type Game struct {
 	renderer  *Renderer
 	States    *States
 	World     *World
+	gmChan    chan int
 }
 
 func NewGame(world *World) *Game {
@@ -25,9 +25,14 @@ func NewGame(world *World) *Game {
 	}
 }
 
-func (g *Game) Start() {
+func (g *Game) Start() int {
 	g.isRunning = true
-	g.loop()
+	g.gmChan = make(chan int)
+	go func() {
+		g.loop()
+	}()
+	return <-g.gmChan
+
 }
 
 func (g *Game) loop() {
@@ -47,7 +52,7 @@ func (g *Game) render() {
 
 func (g *Game) update() {
 	g.States.update()
-	g.World.update()
+	g.World.update(g)
 }
 
 func (g *Game) Log(s string) {
@@ -61,8 +66,11 @@ func (g *Game) Logf(f string, s ...any) {
 }
 
 func (g *Game) GameOver() {
-	g.World.gameOver = true
-	g.renderer.addMessageLine("Game Over")
+	if !g.World.gameOver {
+		g.World.gameOver = true
+		g.renderer.addMessageLine("Game Over")
+		g.gmChan <- 1
+	}
 }
 
 //==============
@@ -83,15 +91,6 @@ func NewStates() *States {
 func (s *States) update() {
 	s.DeltaTime = float64(time.Since(s.start).Milliseconds()) / 1000.0
 	s.start = time.Now()
-	s.readInput()
-}
-
-func (s *States) readInput() {
-	go func() {
-		b := make([]byte, 1)
-		os.Stdin.Read(b)
-		s.Input = b[0]
-	}()
 }
 
 func (s *States) render(r *Renderer) {

@@ -19,9 +19,9 @@ func NewRenderer() *Renderer {
 
 func (r *Renderer) render(startRender func(*Renderer)) {
 	r.buf.Reset()
-	fmt.Println("\033[2J\033[1;1H")
 	startRender(r)
-	fmt.Println(r.buf.String())
+	fmt.Printf("%s%s", "\033[2J\033[1;1H", r.buf.String())
+
 }
 
 func (r *Renderer) renderGame(g *Game) {
@@ -32,12 +32,17 @@ func (r *Renderer) renderGame(g *Game) {
 			if r.writeMessage(g, x, y) {
 				continue
 			}
-			g.renderer.buf.WriteRune(sprites[data[y][x]])
+			var sprite rune
+			if e, ok := data[y][x].(*IEntity); ok {
+				sprite = sprites[(*e).Get().Id]
+			} else {
+				sprite = sprites[data[y][x].(int)]
+
+			}
+
+			g.renderer.buf.WriteRune(sprite)
 		}
 		g.renderer.buf.WriteString("\r\n")
-	}
-	for _, e := range w.getCurrentLevel().entities {
-		e.Update(g)
 	}
 
 	g.States.render(r)
@@ -45,24 +50,31 @@ func (r *Renderer) renderGame(g *Game) {
 }
 
 func (r *Renderer) writeMessage(g *Game, x, y int) bool {
-	messageLen := len(r.messages)
-	if messageLen == 0 {
+	messagesLen := len(r.messages)
+	if messagesLen == 0 {
 		return false
 	}
 	var centerV = g.World.getCurrentLevel().size.Height / 2
 	var centerH = g.World.getCurrentLevel().size.Width / 2
 
-	var startIndexV = centerV - messageLen/2
+	var startIndexV = centerV - messagesLen/2
+	var currentIndexV = y - startIndexV
+	if currentIndexV < 0 || currentIndexV >= messagesLen {
+		return false
+	}
 
-	if y-startIndexV < 0 {
+	message := r.messages[currentIndexV]
+
+	if len(message) == 0 {
 		return false
 	}
-	message := r.messages[y-startIndexV]
+
 	var startIndexH = centerH - len(message)/2
-	if x-startIndexH < 0 {
+	var currentIndexH = x - startIndexH
+	if currentIndexH < 0 || currentIndexH >= len(message) {
 		return false
 	}
-	g.renderer.buf.WriteRune(rune(r.messages[y][x]))
+	g.renderer.buf.WriteRune(rune(r.messages[currentIndexV][currentIndexH]))
 	return true
 
 }
