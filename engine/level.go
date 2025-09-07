@@ -48,8 +48,9 @@ func (lvl *Level) update() {
 		if e.GetRef() == -1 {
 			continue
 		}
-		x, y := e.GetPosition().Floor()
-		lvl.bytes[y][x] = e.GetId()
+		pos := e.GetPosition()
+
+		lvl.bytes[pos.Y][pos.X] = e.GetId()
 	}
 }
 

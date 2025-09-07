@@ -1,38 +1,24 @@
 package engine
 
-import "math"
-
 type Size struct {
 	Width, Height int
 }
 
 type Position struct {
-	X float64
-	Y float64
+	X int
+	Y int
 }
 
-func (p *Position) Move(value float64, d Direction) *Position {
-	return &Position{
-		X: p.X + value*float64(d.X),
-		Y: p.Y + value*float64(d.Y),
+func (p *Position) Move(value int, d Direction) Position {
+	return Position{
+		X: p.X + value*d.X,
+		Y: p.Y + value*d.Y,
 	}
 }
 
-func (p *Position) Floor() (x int, y int) {
-	return int(math.Floor(p.X)), int(math.Floor(p.Y))
-}
-
-func (p *Position) Add(p2 *Position) *Position {
-	p.X = p.X + p2.X
-	p.Y = p.Y + p2.Y
-	return p
-}
-
-func (p *Position) Add2(x, y float64) *Position {
-	p.X = p.X + x
-	p.Y = p.Y + y
-	return p
-}
+//func (p *Position) Floor() (x int, y int) {
+//	return int(math.Floor(p.X)), int(math.Floor(p.Y))
+//}
 
 type Direction struct {
 	X, Y int

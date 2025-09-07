@@ -15,8 +15,9 @@ var sprites = map[byte]rune{
 }
 
 type IEntity interface {
-	GetPosition() *Position
+	GetPosition() Position
 	SetPosition(Position)
+	SetCollision(*Entity)
 	Update(*Game)
 	Start(*Game)
 	GetId() byte
@@ -25,17 +26,18 @@ type IEntity interface {
 }
 
 type Entity struct {
-	Position *Position
-	Id       byte
-	Ref      int
+	Position  Position
+	Collision *Entity
+	Id        byte
+	Ref       int
 }
 
-func (e *Entity) GetPosition() *Position {
+func (e *Entity) GetPosition() Position {
 	return e.Position
 }
 
 func (e *Entity) SetPosition(pos Position) {
-	e.Position = &pos
+	e.Position = pos
 }
 func (e *Entity) GetId() byte {
 	return e.Id
@@ -47,6 +49,10 @@ func (e *Entity) GetRef() int {
 
 func (e *Entity) Destroy() {
 	e.Ref = -1
+}
+
+func (e *Entity) SetCollision(entity *Entity) {
+	e.Collision = entity
 }
 
 func (e *Entity) Start(game *Game) {}

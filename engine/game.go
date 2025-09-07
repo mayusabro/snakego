@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	TIME_BUFFER = 32
+	TIME_BUFFER = 16
 )
 
 type Game struct {
@@ -38,8 +38,7 @@ func (g *Game) loop() {
 }
 func (g *Game) render() {
 	g.renderer.render(func(r *Renderer) {
-		g.World.render(g)
-		g.States.render(r)
+		r.renderGame(g)
 		printMemStats(r)
 	})
 
@@ -57,8 +56,13 @@ func (g *Game) Log(s string) {
 }
 
 func (g *Game) Logf(f string, s ...any) {
-	fmt.Fprintf(g.renderer.buf, f, s)
+	fmt.Fprintf(g.renderer.buf, f, s...)
 	g.renderer.buf.WriteString("\r\n")
+}
+
+func (g *Game) GameOver() {
+	g.World.gameOver = true
+	g.renderer.addMessageLine("Game Over")
 }
 
 //==============
@@ -94,5 +98,5 @@ func (s *States) render(r *Renderer) {
 	if s.DeltaTime <= 0 {
 		return
 	}
-	fmt.Fprintf(r.buf, "FPS %.2f\n", 1000.0/float64(s.DeltaTime)/1000.0)
+	fmt.Fprintf(r.buf, "FPS %.2f\n", 1.0/s.DeltaTime)
 }

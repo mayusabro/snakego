@@ -2,25 +2,13 @@ package engine
 
 type World struct {
 	currentLevel int
+	score        int
+	gameOver     bool
 	levels       []*Level
 }
 
 func (w *World) getCurrentLevel() *Level {
 	return w.levels[w.currentLevel]
-}
-
-func (w *World) render(g *Game) {
-	data := w.getCurrentLevel().bytes
-	for y := range data {
-		for x := range data[y] {
-			g.renderer.buf.WriteRune(sprites[data[y][x]])
-		}
-		g.renderer.buf.WriteString("\r\n")
-	}
-
-	for _, e := range w.getCurrentLevel().entities {
-		e.Update(g)
-	}
 }
 
 func NewWorld(levels ...*Level) *World {
