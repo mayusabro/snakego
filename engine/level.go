@@ -1,7 +1,7 @@
 package engine
 
 type Level struct {
-	size            Size
+	Size            Size
 	garbageEntities garbageEntities
 	bytes           [][]any
 	entities        []IEntity
@@ -9,7 +9,7 @@ type Level struct {
 
 func NewLevel(size Size) *Level {
 	return &Level{
-		size:            size,
+		Size:            size,
 		garbageEntities: make(garbageEntities, 0),
 		bytes:           make([][]any, size.Height+1),
 		entities:        make([]IEntity, 0),
@@ -18,7 +18,7 @@ func NewLevel(size Size) *Level {
 
 func (lvl *Level) Init() *Level {
 	var height = len(lvl.bytes)
-	var width = lvl.size.Width + 1
+	var width = lvl.Size.Width + 1
 	for y := range height {
 		lvl.bytes[y] = make([]any, width)
 	}
@@ -33,8 +33,8 @@ func (lvl *Level) update(g *Game) {
 }
 
 func (lvl *Level) updateLevel() {
-	var height = lvl.size.Height + 1
-	var width = lvl.size.Width + 1
+	var height = lvl.Size.Height + 1
+	var width = lvl.Size.Width + 1
 	for y := range height {
 		for x := range width {
 			if y == 0 || y == height-1 {
@@ -58,7 +58,6 @@ func (lvl *Level) updateEntities(g *Game) {
 		if e.Get().Ref == nil {
 			continue
 		}
-
 		e.Update(g)
 		pos := e.Get().Position
 

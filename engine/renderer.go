@@ -28,7 +28,12 @@ func (r *Renderer) renderGame(g *Game) {
 	w := g.World
 	data := w.getCurrentLevel().bytes
 	for y := range data {
-		for x := range data[y] {
+		for _x := 0; _x < (len(data[y]) * 2); _x++ {
+			if _x%2 == 0 {
+				g.renderer.buf.WriteRune(sprites[SPACE])
+				_x++
+			}
+			x := _x / 2
 			if r.writeMessage(g, x, y) {
 				continue
 			}
@@ -54,8 +59,8 @@ func (r *Renderer) writeMessage(g *Game, x, y int) bool {
 	if messagesLen == 0 {
 		return false
 	}
-	var centerV = g.World.getCurrentLevel().size.Height / 2
-	var centerH = g.World.getCurrentLevel().size.Width / 2
+	var centerV = g.World.getCurrentLevel().Size.Height / 2
+	var centerH = g.World.getCurrentLevel().Size.Width / 2
 
 	var startIndexV = centerV - messagesLen/2
 	var currentIndexV = y - startIndexV

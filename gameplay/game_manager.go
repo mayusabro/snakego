@@ -27,11 +27,11 @@ func (gm *GameManager) StartGame() int {
 		println("Game not initialized")
 		return -1
 	}
-	level := engine.NewLevel(engine.Size{Width: 40, Height: 20})
+	level := engine.NewLevel(engine.Size{Width: 20, Height: 20})
 	level.Init()
 	world := engine.NewWorld(level)
 	gm.player = entities.NewPlayer()
-	world.Spawn(gm.player, engine.Position{X: 10, Y: 10})
+	world.Spawn(gm.player, engine.Position{X: level.Size.Width / 2, Y: level.Size.Height / 2})
 	gm.game = engine.NewGame(world)
 	for range 10 {
 		gm.player.AddTail(gm.game)

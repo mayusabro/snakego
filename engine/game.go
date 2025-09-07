@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	TIME_BUFFER = 16
+	TIME_BUFFER = 32
 )
 
 type Game struct {
@@ -39,6 +39,10 @@ func (g *Game) loop() {
 	for g.isRunning {
 		g.update()
 		g.render()
+		if g.World.gameOver {
+			g.isRunning = false
+			g.gmChan <- g.World.score
+		}
 	}
 }
 func (g *Game) render() {
@@ -69,7 +73,6 @@ func (g *Game) GameOver() {
 	if !g.World.gameOver {
 		g.World.gameOver = true
 		g.renderer.addMessageLine("Game Over")
-		g.gmChan <- 1
 	}
 }
 

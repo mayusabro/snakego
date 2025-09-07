@@ -8,10 +8,10 @@ const (
 )
 
 var sprites = map[int]rune{
-	PLAYER: '@',
-	WALL:   '+',
+	PLAYER: '●',
+	WALL:   '#',
 	SPACE:  ' ',
-	TAIL:   'o',
+	TAIL:   '○',
 }
 
 type IEntity interface {
