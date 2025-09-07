@@ -1,19 +1,5 @@
 package engine
 
-const (
-	SPACE  = 0
-	WALL   = 1
-	PLAYER = 100
-	TAIL   = 101
-)
-
-var sprites = map[int]rune{
-	PLAYER: '●',
-	WALL:   '#',
-	SPACE:  ' ',
-	TAIL:   '○',
-}
-
 type IEntity interface {
 	Get() *Entity
 

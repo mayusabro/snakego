@@ -5,10 +5,6 @@ import (
 	"runtime"
 )
 
-func clearScreen() {
-	fmt.Println()
-}
-
 func printMemStats(r *Renderer) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)

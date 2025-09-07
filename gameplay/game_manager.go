@@ -33,7 +33,7 @@ func (gm *GameManager) StartGame() int {
 	gm.player = entities.NewPlayer()
 	world.Spawn(gm.player, engine.Position{X: level.Size.Width / 2, Y: level.Size.Height / 2})
 	gm.game = engine.NewGame(world)
-	for range 10 {
+	for range 100 {
 		gm.player.AddTail(gm.game)
 	}
 	return gm.game.Start()

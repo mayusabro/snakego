@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 )
@@ -14,6 +15,7 @@ type Game struct {
 	renderer  *Renderer
 	States    *States
 	World     *World
+	logger    func(string, ...any) *bytes.Buffer
 	gmChan    chan int
 }
 
@@ -22,6 +24,7 @@ func NewGame(world *World) *Game {
 		World:    world,
 		renderer: NewRenderer(),
 		States:   NewStates(),
+		logger:   logger(),
 	}
 }
 
@@ -48,6 +51,7 @@ func (g *Game) loop() {
 func (g *Game) render() {
 	g.renderer.render(func(r *Renderer) {
 		r.renderGame(g)
+		g.log()
 		printMemStats(r)
 	})
 
@@ -59,14 +63,26 @@ func (g *Game) update() {
 	g.World.update(g)
 }
 
-func (g *Game) Log(s string) {
-	g.renderer.buf.WriteString(s)
-	g.renderer.buf.WriteString("\r\n")
+func (g *Game) log() {
+	buffer := g.logger("")
+	g.renderer.buf.WriteString("\r\n" + buffer.String())
+	buffer.Reset()
+}
+
+func logger() func(f string, s ...any) *bytes.Buffer {
+	buf := bytes.NewBufferString("")
+	return func(f string, s ...any) *bytes.Buffer {
+		if len(f) == 0 {
+			return buf
+		}
+		fmt.Fprintf(buf, f, s...)
+		fmt.Fprint(buf, "\r\n")
+		return buf
+	}
 }
 
 func (g *Game) Logf(f string, s ...any) {
-	fmt.Fprintf(g.renderer.buf, f, s...)
-	g.renderer.buf.WriteString("\r\n")
+	g.logger(f, s...)
 }
 
 func (g *Game) GameOver() {

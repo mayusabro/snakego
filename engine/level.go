@@ -1,5 +1,9 @@
 package engine
 
+import (
+	. "github.com/mayusabro/snakego/dict"
+)
+
 type Level struct {
 	Size            Size
 	garbageEntities garbageEntities

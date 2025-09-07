@@ -3,6 +3,7 @@ package engine
 import (
 	"bytes"
 	"fmt"
+	"github.com/mayusabro/snakego/dict"
 )
 
 type Renderer struct {
@@ -28,9 +29,11 @@ func (r *Renderer) renderGame(g *Game) {
 	w := g.World
 	data := w.getCurrentLevel().bytes
 	for y := range data {
-		for _x := 0; _x < (len(data[y]) * 2); _x++ {
-			if _x%2 == 0 {
-				g.renderer.buf.WriteRune(sprites[SPACE])
+		for _x := 0; _x < (len(data[y])-1)*2; _x++ {
+			if _x%2 == 1 {
+				g.renderer.buf.WriteRune(
+					dict.Sprites[dict.SPACE],
+				)
 				_x++
 			}
 			x := _x / 2
@@ -39,9 +42,9 @@ func (r *Renderer) renderGame(g *Game) {
 			}
 			var sprite rune
 			if e, ok := data[y][x].(*IEntity); ok {
-				sprite = sprites[(*e).Get().Id]
+				sprite = dict.Sprites[(*e).Get().Id]
 			} else {
-				sprite = sprites[data[y][x].(int)]
+				sprite = dict.Sprites[data[y][x].(int)]
 
 			}
 
