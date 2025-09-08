@@ -7,24 +7,26 @@ import (
 type Level struct {
 	Size            Size
 	garbageEntities garbageEntities
-	bytes           [][]any
+	Bytes           [][]any
 	entities        []IEntity
+	scorer          func(*Game, int) (int, int, int)
 }
 
 func NewLevel(size Size) *Level {
 	return &Level{
 		Size:            size,
 		garbageEntities: make(garbageEntities, 0),
-		bytes:           make([][]any, size.Height+1),
+		Bytes:           make([][]any, size.Height+1),
 		entities:        make([]IEntity, 0),
+		scorer:          scoreRule(20),
 	}
 }
 
 func (lvl *Level) Init() *Level {
-	var height = len(lvl.bytes)
+	var height = len(lvl.Bytes)
 	var width = lvl.Size.Width + 1
 	for y := range height {
-		lvl.bytes[y] = make([]any, width)
+		lvl.Bytes[y] = make([]any, width)
 	}
 	return lvl
 }
@@ -42,16 +44,16 @@ func (lvl *Level) updateLevel() {
 	for y := range height {
 		for x := range width {
 			if y == 0 || y == height-1 {
-				lvl.bytes[y][x] = WALL
+				lvl.Bytes[y][x] = WALL
 				continue
 			}
 
 			if x == 0 || x == width-1 {
-				lvl.bytes[y][x] = WALL
+				lvl.Bytes[y][x] = WALL
 				continue
 			}
 
-			lvl.bytes[y][x] = SPACE
+			lvl.Bytes[y][x] = SPACE
 		}
 	}
 
@@ -59,16 +61,16 @@ func (lvl *Level) updateLevel() {
 
 func (lvl *Level) updateEntities(g *Game) {
 	for _, e := range lvl.entities {
-		if e.Get().Ref == nil {
+		if e.Get().isDestroyed {
 			continue
 		}
 		e.Update(g)
 		pos := e.Get().Position
 
 		func() {
-			if _t, ok := lvl.bytes[pos.Y][pos.X].(*IEntity); ok {
+			if _t, ok := lvl.Bytes[pos.Y][pos.X].(*IEntity); ok {
 				t := *_t
-				if t.Get().Ref == nil || t.Get().Ref == e.Get().Ref {
+				if t.Get().isDestroyed {
 					return
 				}
 				t.Get().Collision = e
@@ -78,7 +80,7 @@ func (lvl *Level) updateEntities(g *Game) {
 				e.Get().Collision = nil
 			}
 
-			if int, ok := lvl.bytes[pos.Y][pos.X].(int); ok {
+			if int, ok := lvl.Bytes[pos.Y][pos.X].(int); ok {
 				e.Get().SurfaceId = int
 				return
 			} else {
@@ -86,40 +88,55 @@ func (lvl *Level) updateEntities(g *Game) {
 			}
 
 		}()
-		if e, ok := lvl.bytes[pos.Y][pos.X].(*IEntity); ok {
+		if e, ok := lvl.Bytes[pos.Y][pos.X].(*IEntity); ok {
 			if (*e).Get().Id == PLAYER {
 				return
 			}
 		}
-		lvl.bytes[pos.Y][pos.X] = &e
+		lvl.Bytes[pos.Y][pos.X] = &e
 
 	}
 
 }
 
 func (lvl *Level) spawn(e IEntity) {
-	_, p := lvl.garbageEntities.Pop()
+	var p IEntity
+	lvl.garbageEntities, p = lvl.garbageEntities.Pop()
 	if p != nil {
-		*p = e
-		e.Get().Ref = p
+		p.Set(e.Get())
 		return
 	}
 	lvl.entities = append(lvl.entities, e)
-	e.Get().Ref = &e
 }
 
-func (lvl *Level) despawn(e *IEntity) {
+func (lvl *Level) despawn(e IEntity) {
 	lvl.garbageEntities = lvl.garbageEntities.Push(e)
-	(*e).Destroy()
+	e.Destroy()
 }
 
-type garbageEntities []*IEntity
+func scoreRule(target int) func(g *Game, s int) (int, int, int) {
+	scorer := 0
+	stage := 1
+	return func(g *Game, s int) (int, int, int) {
+		g.World.Score += s
+		scorer += s
+		inc := 0
+		for scorer >= target {
+			scorer -= target
+			stage++
+			inc++
+		}
+		return stage, scorer, inc
+	}
+}
 
-func (s garbageEntities) Push(v *IEntity) garbageEntities {
+type garbageEntities []IEntity
+
+func (s garbageEntities) Push(v IEntity) garbageEntities {
 	return append(s, v)
 }
 
-func (s garbageEntities) Pop() (garbageEntities, *IEntity) {
+func (s garbageEntities) Pop() (garbageEntities, IEntity) {
 	if len(s) == 0 {
 		return s, nil
 	}

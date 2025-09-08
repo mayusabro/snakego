@@ -16,9 +16,11 @@ func (p *Position) Move(value int, d Direction) Position {
 	}
 }
 
-//func (p *Position) Floor() (x int, y int) {
-//	return int(math.Floor(p.X)), int(math.Floor(p.Y))
-//}
+func (p *Position) Equals(p2 Position) bool {
+	return p.X == p2.X && p.Y == p2.Y
+}
+
+//-=-==========
 
 type Direction struct {
 	X, Y int

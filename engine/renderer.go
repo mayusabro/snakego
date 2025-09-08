@@ -3,6 +3,7 @@ package engine
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/mayusabro/snakego/dict"
 )
 
@@ -27,7 +28,7 @@ func (r *Renderer) render(startRender func(*Renderer)) {
 
 func (r *Renderer) renderGame(g *Game) {
 	w := g.World
-	data := w.getCurrentLevel().bytes
+	data := w.GetCurrentLevel().Bytes
 	for y := range data {
 		for _x := 0; _x < (len(data[y])-1)*2; _x++ {
 			if _x%2 == 1 {
@@ -42,12 +43,13 @@ func (r *Renderer) renderGame(g *Game) {
 			}
 			var sprite rune
 			if e, ok := data[y][x].(*IEntity); ok {
+				if (*e).Get().Ref == nil {
+					sprite = dict.Sprites[dict.SPACE]
+				}
 				sprite = dict.Sprites[(*e).Get().Id]
 			} else {
 				sprite = dict.Sprites[data[y][x].(int)]
-
 			}
-
 			g.renderer.buf.WriteRune(sprite)
 		}
 		g.renderer.buf.WriteString("\r\n")
@@ -62,8 +64,8 @@ func (r *Renderer) writeMessage(g *Game, x, y int) bool {
 	if messagesLen == 0 {
 		return false
 	}
-	var centerV = g.World.getCurrentLevel().Size.Height / 2
-	var centerH = g.World.getCurrentLevel().Size.Width / 2
+	var centerV = g.World.GetCurrentLevel().Size.Height / 2
+	var centerH = g.World.GetCurrentLevel().Size.Width / 2
 
 	var startIndexV = centerV - messagesLen/2
 	var currentIndexV = y - startIndexV
@@ -87,6 +89,6 @@ func (r *Renderer) writeMessage(g *Game, x, y int) bool {
 
 }
 
-func (r *Renderer) addMessageLine(s string) {
-	r.messages = append(r.messages, s)
+func (r *Renderer) addMessageLine(s string, args ...any) {
+	r.messages = append(r.messages, fmt.Sprintf(s, args...))
 }

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	TIME_BUFFER = 32
+	TIME_BUFFER = 16
 )
 
 type Game struct {
@@ -38,13 +38,17 @@ func (g *Game) Start() int {
 
 }
 
+func (g *Game) AddScore(score int) {
+	g.World.ScoreListener <- score
+}
+
 func (g *Game) loop() {
 	for g.isRunning {
 		g.update()
 		g.render()
 		if g.World.gameOver {
 			g.isRunning = false
-			g.gmChan <- g.World.score
+			g.gmChan <- g.World.Score
 		}
 	}
 }
@@ -62,6 +66,16 @@ func (g *Game) update() {
 	g.States.update()
 	g.World.update(g)
 }
+
+func (g *Game) GameOver() {
+	if !g.World.gameOver {
+		g.World.gameOver = true
+		g.renderer.addMessageLine("Game Over")
+		g.renderer.addMessageLine("Score:%d", g.World.Score)
+	}
+}
+
+//============== LOGGER
 
 func (g *Game) log() {
 	buffer := g.logger("")
@@ -83,13 +97,6 @@ func logger() func(f string, s ...any) *bytes.Buffer {
 
 func (g *Game) Logf(f string, s ...any) {
 	g.logger(f, s...)
-}
-
-func (g *Game) GameOver() {
-	if !g.World.gameOver {
-		g.World.gameOver = true
-		g.renderer.addMessageLine("Game Over")
-	}
 }
 
 //==============
