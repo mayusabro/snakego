@@ -42,11 +42,11 @@ func (r *Renderer) renderGame(g *Game) {
 				continue
 			}
 			var sprite rune
-			if e, ok := data[y][x].(*IEntity); ok {
-				if (*e).Get().Ref == nil {
+			if e, ok := data[y][x].(IEntity); ok {
+				if e.Get().isDestroyed {
 					sprite = dict.Sprites[dict.SPACE]
 				}
-				sprite = dict.Sprites[(*e).Get().Id]
+				sprite = dict.Sprites[e.Get().Id]
 			} else {
 				sprite = dict.Sprites[data[y][x].(int)]
 			}

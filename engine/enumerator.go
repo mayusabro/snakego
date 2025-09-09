@@ -20,6 +20,14 @@ func (p *Position) Equals(p2 Position) bool {
 	return p.X == p2.X && p.Y == p2.Y
 }
 
+func (d Position) Undefined() Position {
+	return Position{X: -1, Y: -1}
+}
+
+func (d Position) Zero() Position {
+	return Position{X: 0, Y: 0}
+}
+
 //-=-==========
 
 type Direction struct {

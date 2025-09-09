@@ -5,6 +5,14 @@ import (
 	"runtime"
 )
 
+func removeElement[T any](s []T, i int) []T {
+	if i >= len(s) || i < 0 {
+		return s
+	}
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
+}
+
 func printMemStats(r *Renderer) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)

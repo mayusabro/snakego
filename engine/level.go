@@ -1,24 +1,29 @@
 package engine
 
 import (
+	"math/rand"
+
+	"github.com/mayusabro/snakego/dict"
 	. "github.com/mayusabro/snakego/dict"
 )
 
 type Level struct {
-	Size            Size
-	garbageEntities garbageEntities
-	Bytes           [][]any
-	entities        []IEntity
-	scorer          func(*Game, int) (int, int, int)
+	Size         Size
+	Bytes        [][]any
+	entities     []IEntity
+	tempEntities []IEntity
+	entityQueue  Queue[IEntity]
+	stage        int
+	scorer       func(*Game, int) (int, int, int)
 }
 
 func NewLevel(size Size) *Level {
 	return &Level{
-		Size:            size,
-		garbageEntities: make(garbageEntities, 0),
-		Bytes:           make([][]any, size.Height+1),
-		entities:        make([]IEntity, 0),
-		scorer:          scoreRule(20),
+		Size:        size,
+		Bytes:       make([][]any, size.Height+1),
+		entities:    []IEntity{},
+		entityQueue: Queue[IEntity]{},
+		scorer:      scoreRule(10),
 	}
 }
 
@@ -32,6 +37,7 @@ func (lvl *Level) Init() *Level {
 }
 
 func (lvl *Level) update(g *Game) {
+	g.logger("Entities : %v", len(lvl.entities))
 	if !g.World.gameOver {
 		lvl.updateLevel()
 		lvl.updateEntities(g)
@@ -60,16 +66,19 @@ func (lvl *Level) updateLevel() {
 }
 
 func (lvl *Level) updateEntities(g *Game) {
-	for _, e := range lvl.entities {
+	lvl.entities = lvl.tempEntities
+	lvl.spawnQueue()
+	lvl.tempEntities = lvl.entities[0:]
+	for i, e := range lvl.entities {
 		if e.Get().isDestroyed {
+			lvl.tempEntities = removeElement(lvl.entities, i)
 			continue
 		}
 		e.Update(g)
 		pos := e.Get().Position
 
 		func() {
-			if _t, ok := lvl.Bytes[pos.Y][pos.X].(*IEntity); ok {
-				t := *_t
+			if t, ok := lvl.Bytes[pos.Y][pos.X].(IEntity); ok {
 				if t.Get().isDestroyed {
 					return
 				}
@@ -82,64 +91,62 @@ func (lvl *Level) updateEntities(g *Game) {
 
 			if int, ok := lvl.Bytes[pos.Y][pos.X].(int); ok {
 				e.Get().SurfaceId = int
-				return
 			} else {
 				e.Get().SurfaceId = -1
 			}
-
 		}()
-		if e, ok := lvl.Bytes[pos.Y][pos.X].(*IEntity); ok {
-			if (*e).Get().Id == PLAYER {
+
+		if e, ok := lvl.Bytes[pos.Y][pos.X].(IEntity); ok {
+			if e.Get().Id == PLAYER {
 				return
 			}
 		}
-		lvl.Bytes[pos.Y][pos.X] = &e
-
+		lvl.Bytes[pos.Y][pos.X] = e
 	}
 
+}
+
+func (lvl *Level) spawnQueue() {
+	e, err := lvl.entityQueue.Dequeue()
+	if err != nil {
+		return
+	}
+
+	if (*e).Get().Position.Equals(Position{}.Undefined()) {
+		pos := lvl.getRandomPosition()
+		lb := lvl.Bytes
+		for lb[pos.X][pos.Y] != dict.SPACE {
+			pos = lvl.getRandomPosition()
+		}
+		(*e).Get().Position = pos
+	}
+	lvl.entities = append(lvl.entities, *e)
+
+}
+
+func (l *Level) getRandomPosition() Position {
+	return Position{X: rand.Intn(2 + l.Size.Width - 2), Y: rand.Intn(2 + l.Size.Height - 2)}
 }
 
 func (lvl *Level) spawn(e IEntity) {
-	var p IEntity
-	lvl.garbageEntities, p = lvl.garbageEntities.Pop()
-	if p != nil {
-		p.Set(e.Get())
-		return
-	}
-	lvl.entities = append(lvl.entities, e)
+	lvl.entityQueue.Enqueue(&e)
 }
 
 func (lvl *Level) despawn(e IEntity) {
-	lvl.garbageEntities = lvl.garbageEntities.Push(e)
 	e.Destroy()
 }
 
 func scoreRule(target int) func(g *Game, s int) (int, int, int) {
 	scorer := 0
-	stage := 1
 	return func(g *Game, s int) (int, int, int) {
 		g.World.Score += s
 		scorer += s
 		inc := 0
 		for scorer >= target {
 			scorer -= target
-			stage++
+			g.World.GetCurrentLevel().stage++
 			inc++
 		}
-		return stage, scorer, inc
+		return g.World.GetCurrentLevel().stage, scorer, inc
 	}
-}
-
-type garbageEntities []IEntity
-
-func (s garbageEntities) Push(v IEntity) garbageEntities {
-	return append(s, v)
-}
-
-func (s garbageEntities) Pop() (garbageEntities, IEntity) {
-	if len(s) == 0 {
-		return s, nil
-	}
-	l := len(s)
-	return s[:l-1], s[l-1]
 }

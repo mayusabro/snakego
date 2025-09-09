@@ -2,7 +2,6 @@ package engine
 
 type IEntity interface {
 	Get() *Entity
-	Set(e *Entity)
 	Update(*Game)
 	Start(*Game)
 
@@ -15,15 +14,10 @@ type Entity struct {
 	SurfaceId   int
 	isDestroyed bool
 	Id          int
-	Ref         *IEntity
 }
 
 func (e *Entity) Get() *Entity {
 	return e
-}
-
-func (e *Entity) Set(e2 *Entity) {
-	*e = *e2
 }
 
 func (e *Entity) Destroy() {

@@ -23,12 +23,16 @@ type Player struct {
 	move  func(int int, deltaTime float64) int
 }
 
-func NewPlayer() *Player {
+func NewPlayer(position engine.Position) *Player {
 	return &Player{
 		Snake: Snake{
 			Entity: engine.Entity{
-				Id: dict.PLAYER,
+				Id:       dict.PLAYER,
+				Position: position,
 			},
+			LastPosition:  position,
+			Direction:     engine.Direction{}.Right(),
+			LastDirection: engine.Direction{}.Right(),
 		},
 		Speed: 5,
 		move:  movement(),
@@ -43,7 +47,12 @@ func (p *Player) AddTail(g *engine.Game) {
 		tail = newTail(&p.tail.Snake)
 	}
 	p.tail = tail
-	g.World.Spawn(tail, tail.parent.LastPosition)
+	tail.Direction = tail.parent.Direction
+	tail.Position = engine.Position{
+		X: tail.parent.Position.X - tail.Direction.X,
+		Y: tail.parent.Position.Y - tail.Direction.Y,
+	}
+	g.World.Spawn(tail, tail.Position)
 
 }
 
@@ -84,6 +93,7 @@ func (p *Player) CheckCollision(g *engine.Game) {
 			case dict.WALL:
 				g.GameOver()
 			}
+			g.Logf("Collision: %v", entity.Get().Id)
 			if item, ok := coll.(IItem); ok {
 				p.checkItemCollision(g, item)
 			}
@@ -105,7 +115,6 @@ func (p *Player) checkItemCollision(g *engine.Game, item IItem) {
 		item.StartEffect(p)
 	}
 	g.World.Despawn(item.Get())
-	SpawnRandomItem(g)
 }
 
 func (p *Player) CheckSurface(g *engine.Game) {
@@ -169,7 +178,8 @@ func newTail(parent *Snake) *tail {
 	return &tail{
 		Snake: Snake{
 			Entity: engine.Entity{
-				Id: dict.TAIL,
+				Id:       dict.TAIL,
+				Position: parent.Position,
 			},
 		},
 		parent: parent,

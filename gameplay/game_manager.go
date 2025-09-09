@@ -13,6 +13,7 @@ type GameManager struct {
 	initialized bool
 	game        *engine.Game
 	player      *entities.Player
+	spawner     func(*engine.Game)
 }
 
 func (gm *GameManager) Init() {
@@ -23,32 +24,28 @@ func (gm *GameManager) Init() {
 	gm.ReadInput()
 }
 
-func (gm *GameManager) StartGame() int {
+func (gm *GameManager) StartGame() {
 	if !gm.initialized {
 		println("Game not initialized")
-		return -1
+		return
 	}
 
 	gm.listenScore()
 	gm.createGame()
+	gm.initSpawner()
 
-	go func() {
-		time.Sleep(time.Second * 2)
-		entities.SpawnRandomItem(gm.game)
-	}()
-
-	return gm.game.Start()
+	gm.game.Start()
 }
 
 func (gm *GameManager) createGame() {
-	level := engine.NewLevel(engine.Size{Width: 20, Height: 20})
+	level := engine.NewLevel(engine.Size{Width: 10, Height: 10})
 	level.Init()
 	world := engine.NewWorld(level)
-	gm.player = entities.NewPlayer()
-	world.Spawn(gm.player, engine.Position{X: level.Size.Width / 2, Y: level.Size.Height / 2})
+	gm.player = entities.NewPlayer(engine.Position{X: level.Size.Width / 2, Y: level.Size.Height / 2})
+	world.Spawn(gm.player, gm.player.Position)
 	gm.game = engine.NewGame(world)
 
-	for range 5 {
+	for range 2 {
 		gm.player.AddTail(gm.game)
 	}
 
@@ -66,9 +63,31 @@ func (gm *GameManager) addScore(score int) {
 	_, _, inc := gm.game.World.AddScore(gm.game, score)
 	for range inc {
 		gm.player.AddTail(gm.game)
-		gm.player.Speed += 1
+		gm.player.Speed++
 	}
 
+}
+
+func (gm *GameManager) initSpawner() {
+	gm.spawner = gm.spawners()
+	go func() {
+		for {
+			gm.spawner(gm.game)
+		}
+	}()
+}
+
+func (gm *GameManager) spawners() func(*engine.Game) {
+	timer := 0
+	return func(g *engine.Game) {
+
+		timer++
+		if timer > int(time.Second*2) {
+			entities.SpawnRandomItem(g)
+			timer = 0
+			return
+		}
+	}
 }
 
 func (gm *GameManager) ReadInput() {

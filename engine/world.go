@@ -35,7 +35,7 @@ func (w *World) Despawn(entity IEntity) {
 }
 
 func (w *World) RenderStates(g *Game) {
-	g.logger("Level : %d", g.World.currentLevel)
+	g.logger("Level : %d", g.World.GetCurrentLevel().stage)
 	g.logger("Score : %d", g.World.Score)
 }
 

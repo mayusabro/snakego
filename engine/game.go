@@ -16,7 +16,6 @@ type Game struct {
 	States    *States
 	World     *World
 	logger    func(string, ...any) *bytes.Buffer
-	gmChan    chan int
 }
 
 func NewGame(world *World) *Game {
@@ -28,13 +27,9 @@ func NewGame(world *World) *Game {
 	}
 }
 
-func (g *Game) Start() int {
+func (g *Game) Start() {
 	g.isRunning = true
-	g.gmChan = make(chan int)
-	go func() {
-		g.loop()
-	}()
-	return <-g.gmChan
+	g.loop()
 
 }
 
@@ -48,7 +43,6 @@ func (g *Game) loop() {
 		g.render()
 		if g.World.gameOver {
 			g.isRunning = false
-			g.gmChan <- g.World.Score
 		}
 	}
 }
