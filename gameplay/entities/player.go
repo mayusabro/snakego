@@ -93,7 +93,6 @@ func (p *Player) CheckCollision(g *engine.Game) {
 			case dict.WALL:
 				g.GameOver()
 			}
-			g.Logf("Collision: %v", entity.Get().Id)
 			if item, ok := coll.(IItem); ok {
 				p.checkItemCollision(g, item)
 			}

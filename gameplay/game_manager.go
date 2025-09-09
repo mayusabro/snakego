@@ -38,7 +38,7 @@ func (gm *GameManager) StartGame() {
 }
 
 func (gm *GameManager) createGame() {
-	level := engine.NewLevel(engine.Size{Width: 10, Height: 10})
+	level := engine.NewLevel(engine.Size{Width: 20, Height: 20})
 	level.Init()
 	world := engine.NewWorld(level)
 	gm.player = entities.NewPlayer(engine.Position{X: level.Size.Width / 2, Y: level.Size.Height / 2})
